@@ -63,3 +63,6 @@
 /drush
 /drupal.phar
 /drupal
+
+# Ignore IDE and editor specific files
+/.idea
