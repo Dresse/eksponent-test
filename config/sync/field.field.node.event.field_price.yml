@@ -1,0 +1,23 @@
+uuid: a175d9dc-bb27-4737-b3e5-6774876c788c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_price
+    - node.type.event
+id: node.event.field_price
+field_name: field_price
+entity_type: node
+bundle: event
+label: Price
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: DKK
+field_type: decimal

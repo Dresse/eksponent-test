@@ -1,0 +1,23 @@
+uuid: d3f730ad-7a03-4fa0-b191-043e67345afb
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_tickets
+    - node.type.event
+id: node.event.field_tickets
+field_name: field_tickets
+entity_type: node
+bundle: event
+label: Tickets
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: 0
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer
