@@ -26,14 +26,15 @@ class TicketsFormatter extends FormatterBase {
     $element = [];
 
     foreach ($items as $delta => $item) {
-      $value = (int)$item->value;
+      $value = (int) $item->value;
 
       if ($value === 0) {
         $element[$delta] = [
           '#markup' => $this->t('SOLD OUT'),
           '#type' => 'item',
         ];
-      } elseif ($value <= 10) {
+      }
+      elseif ($value <= 10) {
         $element[$delta] = [
           '#markup' => $this->t('@value seats left', ['@value' => $value]),
           '#type' => 'item',
@@ -43,4 +44,5 @@ class TicketsFormatter extends FormatterBase {
 
     return $element;
   }
+
 }
