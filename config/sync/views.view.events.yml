@@ -110,17 +110,15 @@ display:
         options: {  }
       empty: {  }
       sorts:
-        created:
-          id: created
-          table: node_field_data
-          field: created
+        field_duration_value:
+          id: field_duration_value
+          table: node__field_duration
+          field: field_duration_value
           relationship: none
           group_type: group
           admin_label: ''
-          entity_type: node
-          entity_field: created
-          plugin_id: date
-          order: DESC
+          plugin_id: datetime
+          order: ASC
           expose:
             label: ''
             field_identifier: ''
