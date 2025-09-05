@@ -1,0 +1,40 @@
+/* Eksponent theme styling */
+
+/* Event list styling */
+
+.event-item {
+  border: 1px solid black;
+  padding: 20px;
+  display: flex;
+}
+
+.event-image {
+  width: 400px;
+  height: auto;
+
+  img {
+    width: 400px;
+    height: auto;
+    max-width: none;
+  }
+}
+
+.event-info-wrapper {
+  margin-left: 20px;
+}
+
+.event-info {
+  display: flex;
+}
+
+.event-title {
+  p {
+    margin: 0;
+    font-weight: bold;
+  }
+
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+}

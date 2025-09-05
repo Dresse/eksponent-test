@@ -1,0 +1,13 @@
+name: Eksponent
+type: theme
+base theme: olivero
+description: 'Custom theme Eksponent test site'
+core_version_requirement: ^11
+
+libraries:
+  - eksponent/eksponent-styling
+
+regions:
+  header: 'Header'
+  content: 'Content'
+  footer: 'Footer'

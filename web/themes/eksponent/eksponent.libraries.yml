@@ -1,0 +1,4 @@
+eksponent-styling:
+  css:
+    theme:
+      css/eksponent.css: {}

@@ -1,0 +1,5 @@
+name: 'Eksponent Events'
+type: module
+description: 'Module for handling events logic'
+package: Custom
+core_version_requirement: ^10 || ^11
