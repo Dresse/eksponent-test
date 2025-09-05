@@ -1,0 +1,14 @@
+<?php
+
+/**
+ * @file
+ * Primary module hooks for events module.
+ */
+
+/**
+ * Implements hook_cron().
+ */
+function eksponent_events_cron(): void {
+  $api_url = 'https://toolbox.eksponent.com:8030/events.json';
+  \Drupal::service('eksponent_events.importer')->importEvents($api_url);
+}

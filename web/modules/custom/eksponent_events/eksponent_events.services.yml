@@ -1,0 +1,5 @@
+services:
+  eksponent_events.importer:
+    class: 'Drupal\eksponent_events\Services\EventsImporter'
+    arguments:
+      ['@http_client', '@file.repository', '@file_system']

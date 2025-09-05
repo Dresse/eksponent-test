@@ -1,0 +1,6 @@
+services:
+  eksponent_events.commands:
+    class: 'Drupal\eksponent_events\Commands\EventsCommands'
+    arguments: ['@eksponent_events.importer']
+    tags:
+      - { name: drush.command }
