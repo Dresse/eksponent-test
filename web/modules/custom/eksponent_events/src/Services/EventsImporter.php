@@ -2,8 +2,10 @@
 
 namespace Drupal\eksponent_events\Services;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use GuzzleHttp\ClientInterface;
 use Drupal\node\Entity\Node;
 use Drupal\file\FileRepositoryInterface;
@@ -37,14 +39,32 @@ class EventsImporter {
    */
   protected FileSystemInterface $fileSystem;
 
+  /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected entityTypeManagerInterface $entityTypeManager;
+
+  /**
+   * The logger channel.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface
+   */
+  protected LoggerChannelFactoryInterface $loggerFactory;
+
   public function __construct(
     ClientInterface $httpClient,
     FileRepositoryInterface $fileRepository,
     FileSystemInterface $fileSystem,
+    EntityTypeManagerInterface $entityTypeManager,
+    LoggerChannelFactoryInterface $loggerFactory,
   ) {
     $this->httpClient = $httpClient;
     $this->fileRepository = $fileRepository;
     $this->fileSystem = $fileSystem;
+    $this->entityTypeManager = $entityTypeManager;
+    $this->logger = $loggerFactory->get('eksponent_events');
   }
 
   /**
@@ -63,10 +83,11 @@ class EventsImporter {
         }
       }
     }
-    catch (\Exception $e) {
-      \Drupal::logger('eksponent_events')->error('Failed to import events: @message', ['@message' => $e->getMessage()]);
-    }
     catch (GuzzleException $e) {
+      $this->logger->error('HTTP request failed: @message', ['@message' => $e->getMessage()]);
+    }
+    catch (\Throwable $e) {
+      $this->logger->error('Failed to import events: @message', ['@message' => $e->getMessage()]);
     }
   }
 
@@ -78,7 +99,7 @@ class EventsImporter {
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   protected function createOrUpdateEvent(array $eventData): void {
-    $existingNodes = \Drupal::entityTypeManager()
+    $existingNodes = $this->entityTypeManager
       ->getStorage('node')
       ->loadByProperties(['uuid' => $eventData['id']]);
 
@@ -148,7 +169,7 @@ class EventsImporter {
       $file = $this->fileRepository->writeData($data, $destination, FileExists::Replace);
 
       // Check if a media entity already exists for this file.
-      $mediaStorage = \Drupal::entityTypeManager()->getStorage('media');
+      $mediaStorage = $this->entityTypeManager->getStorage('media');
       $media = $mediaStorage->loadByProperties(['field_media_image' => $file->id()]);
       $media = reset($media);
 
@@ -169,7 +190,7 @@ class EventsImporter {
       return $media->id();
     }
     catch (\Exception $e) {
-      \Drupal::logger('eksponent_events')->error('Image import failed: @message', ['@message' => $e->getMessage()]);
+      $this->logger->error('Image import failed: @message', ['@message' => $e->getMessage()]);
       return NULL;
     }
 
