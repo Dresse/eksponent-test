@@ -95,8 +95,10 @@ class EventsImporter {
       $response = $this->httpClient->request('GET', $apiUrl);
       if ($response->getStatusCode() === 200) {
         $events = json_decode($response->getBody()->getContents(), TRUE);
-        foreach ($events as $eventData) {
-          $this->createOrUpdateEvent($eventData);
+        if (is_array($events)) {
+          foreach ($events as $eventData) {
+            $this->createOrUpdateEvent($eventData);
+          }
         }
       }
     }
