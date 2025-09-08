@@ -19,6 +19,6 @@ Some things could be done to improve the current solution:
 
 - Add better templating/styling for both the event node template and the event view template.
 - The logic for the event importer could be updated to also include:
- - Add logic to delete or unpublish old events which has expired.
- - Add logic to only import events which is happening in the future, omitting already expired events.
- - Add logic to delete or unpublish events which has been cancelled.
+  - Add logic to delete or unpublish old events which has expired.
+  - Add logic to only import events which is happening in the future, omitting already expired events.
+  - Add logic to delete or unpublish events which has been cancelled.
