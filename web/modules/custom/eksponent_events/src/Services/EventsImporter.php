@@ -1,15 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\eksponent_events\Services;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use GuzzleHttp\ClientInterface;
 use Drupal\node\Entity\Node;
 use Drupal\file\FileRepositoryInterface;
+use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\GuzzleException;
+use Psr\Log\LoggerInterface;
 use function Safe\file_get_contents;
 use function Safe\parse_url;
 
@@ -28,7 +31,7 @@ class EventsImporter {
   /**
    * The file repository service.
    *
-   * @var \Drupal\Core\File\FileRepositoryInterface
+   * @var \Drupal\File\FileRepositoryInterface
    */
   protected FileRepositoryInterface $fileRepository;
 
@@ -44,15 +47,29 @@ class EventsImporter {
    *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected entityTypeManagerInterface $entityTypeManager;
+  protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
    * The logger channel.
    *
-   * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface
+   * @var \Psr\Log\LoggerInterface
    */
-  protected LoggerChannelFactoryInterface $loggerFactory;
+  protected LoggerInterface $logger;
 
+  /**
+   * EventsImporter constructor.
+   *
+   * @param \GuzzleHttp\ClientInterface $httpClient
+   *   The HTTP client.
+   * @param \Drupal\File\FileRepositoryInterface $fileRepository
+   *   The file repository service.
+   * @param \Drupal\Core\File\FileSystemInterface $fileSystem
+   *   The file system service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerFactory
+   *   The logger channel factory.
+   */
   public function __construct(
     ClientInterface $httpClient,
     FileRepositoryInterface $fileRepository,
@@ -99,17 +116,23 @@ class EventsImporter {
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   protected function createOrUpdateEvent(array $eventData): void {
+    $uuid = $eventData['id'] ?? NULL;
+    if (!$uuid) {
+      $this->logger->warning('Event data missing UUID, skipping.');
+      return;
+    }
+
     $existingNodes = $this->entityTypeManager
       ->getStorage('node')
       ->loadByProperties(['uuid' => $eventData['id']]);
 
     $node = reset($existingNodes) ?: Node::create(['type' => 'event']);
     $node->set('uuid', $eventData['id']);
-    $node->set('title', $eventData['title']);
-    $node->set('field_description', $eventData['description']);
-    $node->set('field_price', $eventData['price']['amount']);
-    $node->set('field_tickets', $eventData['available_tickets']);
-    $node->set('field_organizer', $eventData['organizer']['name']);
+    $node->set('title', $eventData['title'] ?? '');
+    $node->set('field_description', $eventData['description'] ?? '');
+    $node->set('field_price', $eventData['price']['amount'] ?? 0);
+    $node->set('field_tickets', $eventData['available_tickets'] ?? 0);
+    $node->set('field_organizer', $eventData['organizer']['name'] ?? '');
 
     // Fetch start and end dates.
     $field_duration = [];
@@ -125,7 +148,7 @@ class EventsImporter {
     if (!empty($eventData['image'])) {
       $mediaId = $this->importImageAsMedia($eventData['image'], $eventData['title']);
       if ($mediaId) {
-        $node->set('field_primary_image', ['target_id' => $mediaId]);
+        $node->set('field_primary_image', ['target_id' => $mediaId] ?? NULL);
       }
     }
 
@@ -133,7 +156,15 @@ class EventsImporter {
   }
 
   /**
-   * Import image and create a media entity.
+   * Imports an image from a URL and creates a media entity.
+   *
+   * @param string $imageUrl
+   *   The image URL.
+   * @param string $title
+   *   The image title.
+   *
+   * @return int|null
+   *   The media entity ID or NULL on failure.
    */
   protected function importImageAsMedia(string $imageUrl, string $title): ?int {
     try {
@@ -158,9 +189,6 @@ class EventsImporter {
 
       // Download the file data.
       $data = file_get_contents($imageUrl);
-      if (empty($data)) {
-        throw new \Exception('Failed to download file.');
-      }
 
       // Save the file using the file.repository service.
       // If the file name already exists, we replace it.
@@ -170,7 +198,11 @@ class EventsImporter {
 
       // Check if a media entity already exists for this file.
       $mediaStorage = $this->entityTypeManager->getStorage('media');
-      $media = $mediaStorage->loadByProperties(['field_media_image' => $file->id()]);
+      $media = $mediaStorage->loadByProperties([
+        'bundle' => 'image',
+        'name' => $title,
+        'field_media_image' => $file->id(),
+      ]);
       $media = reset($media);
 
       if (!$media) {
@@ -187,7 +219,7 @@ class EventsImporter {
         ]);
         $media->save();
       }
-      return $media->id();
+      return $media ? (int) $media->id() : NULL;
     }
     catch (\Exception $e) {
       $this->logger->error('Image import failed: @message', ['@message' => $e->getMessage()]);
